@@ -1,187 +1,237 @@
---// Vixblibi.lua
+-- Vixblibi.lua
+-- Biblioteca de UI com abas, seções, botões, minimizar/maximizar/fechar e botão flutuante
+
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
 
 local Vix = {}
 Vix.windows = {}
 
--- Função auxiliar
+-- Função utilitária para criar instâncias
 local function make(class, props)
     local obj = Instance.new(class)
-    for k,v in pairs(props or {}) do
+    for k, v in pairs(props) do
         obj[k] = v
     end
     return obj
 end
 
--- Tema padrão
-local defaultTheme = {
-    Background = Color3.fromRGB(25,25,35),
-    Sidebar    = Color3.fromRGB(18,18,25),
-    Accent     = Color3.fromRGB(0,170,140),
-    Text       = Color3.fromRGB(255,255,255),
-}
-
--- Criar janela
-function Vix:CreateWindow(opts)
-    opts = opts or {}
-    local theme = opts.Theme or defaultTheme
-    local size = opts.Size or UDim2.new(0,500,0,300)
-
-    -- ScreenGui
-    local gui = make("ScreenGui", {
+-- Função principal para criar a janela
+function Vix:CreateWindow(title)
+    local ScreenGui = make("ScreenGui", {
         Name = "VixUI",
-        Parent = game:GetService("CoreGui"),
-        ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        ResetOnSpawn = false,
+        Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
     })
 
-    -- Botão flutuante
-    local toggleBtn = make("TextButton", {
-        Parent = gui,
-        Text = "📂 Menu",
-        Size = UDim2.new(0,100,0,35),
-        Position = UDim2.new(0,20,1,-55),
-        BackgroundColor3 = theme.Accent,
-        TextColor3 = Color3.new(1,1,1),
-        Font = Enum.Font.GothamBold,
-        TextSize = 14,
-        AutoButtonColor = true
-    })
-    toggleBtn.AnchorPoint = Vector2.new(0,1)
-
-    -- Frame principal
-    local window = make("Frame", {
-        Parent = gui,
-        Size = size,
-        Position = UDim2.new(0.5,-size.X.Offset/2,0.5,-size.Y.Offset/2),
-        BackgroundColor3 = theme.Background,
+    -- Janela principal
+    local Window = make("Frame", {
+        Parent = ScreenGui,
+        BackgroundColor3 = Color3.fromRGB(35, 35, 35),
         BorderSizePixel = 0,
-        Visible = false,
+        Size = UDim2.new(0, 500, 0, 300),
+        Position = UDim2.new(0.5, -250, 0.5, -150),
+        Visible = true
     })
-    window.ClipsDescendants = true
-    window.Active = true
-    window.Draggable = false
-
-    -- Cantos arredondados
-    make("UICorner", {Parent = window, CornerRadius = UDim.new(0,12)})
+    Window.ClipsDescendants = true
+    Window.Active = true
+    Window.Draggable = true
 
     -- Barra superior
-    local titleBar = make("Frame", {
-        Parent = window,
-        Size = UDim2.new(1,0,0,30),
-        BackgroundColor3 = theme.Sidebar,
+    local TopBar = make("Frame", {
+        Parent = Window,
+        BackgroundColor3 = Color3.fromRGB(25, 25, 25),
         BorderSizePixel = 0,
+        Size = UDim2.new(1, 0, 0, 30)
     })
-    make("UICorner", {Parent = titleBar, CornerRadius = UDim.new(0,12)})
 
-    -- Título
-    make("TextLabel", {
-        Parent = titleBar,
-        Text = opts.Title or "Vixblibi",
-        Size = UDim2.new(1,-90,1,0),
-        Position = UDim2.new(0,10,0,0),
+    local TitleLabel = make("TextLabel", {
+        Parent = TopBar,
         BackgroundTransparency = 1,
-        TextColor3 = theme.Text,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Font = Enum.Font.GothamBold,
-        TextSize = 14
+        Size = UDim2.new(1, -90, 1, 0),
+        Position = UDim2.new(0, 10, 0, 0),
+        Font = Enum.Font.SourceSansBold,
+        Text = title or "Vix UI",
+        TextColor3 = Color3.new(1, 1, 1),
+        TextSize = 18,
+        TextXAlignment = Enum.TextXAlignment.Left
     })
 
-    -- Botões topo
-    local function createTopBtn(txt, posX)
-        local b = make("TextButton", {
-            Parent = titleBar,
-            Text = txt,
-            Size = UDim2.new(0,25,0,25),
-            Position = UDim2.new(1,-posX,0.5,-12),
-            BackgroundColor3 = theme.Accent,
-            TextColor3 = Color3.new(1,1,1),
-            Font = Enum.Font.GothamBold,
-            TextSize = 12,
-        })
-        make("UICorner", {Parent=b, CornerRadius=UDim.new(0,6)})
-        return b
-    end
-    local btnMin = createTopBtn("-", 80)
-    local btnMax = createTopBtn("□", 50)
-    local btnClose = createTopBtn("X", 20)
+    -- Botões do topo
+    local CloseButton = make("TextButton", {
+        Parent = TopBar,
+        Size = UDim2.new(0, 30, 1, 0),
+        Position = UDim2.new(1, -30, 0, 0),
+        BackgroundColor3 = Color3.fromRGB(200, 50, 50),
+        Text = "X",
+        TextColor3 = Color3.new(1, 1, 1),
+        Font = Enum.Font.SourceSansBold,
+        TextSize = 16
+    })
 
-    -- Sidebar
-    local sidebar = make("Frame", {
-        Parent = window,
-        Size = UDim2.new(0,120,1,-30),
-        Position = UDim2.new(0,0,0,30),
-        BackgroundColor3 = theme.Sidebar,
-        BorderSizePixel = 0
+    local MinButton = make("TextButton", {
+        Parent = TopBar,
+        Size = UDim2.new(0, 30, 1, 0),
+        Position = UDim2.new(1, -60, 0, 0),
+        BackgroundColor3 = Color3.fromRGB(255, 170, 0),
+        Text = "-",
+        TextColor3 = Color3.new(1, 1, 1),
+        Font = Enum.Font.SourceSansBold,
+        TextSize = 16
+    })
+
+    local MaxButton = make("TextButton", {
+        Parent = TopBar,
+        Size = UDim2.new(0, 30, 1, 0),
+        Position = UDim2.new(1, -90, 0, 0),
+        BackgroundColor3 = Color3.fromRGB(0, 170, 255),
+        Text = "+",
+        TextColor3 = Color3.new(1, 1, 1),
+        Font = Enum.Font.SourceSansBold,
+        TextSize = 16
     })
 
     -- Conteúdo
-    local content = make("Frame", {
-        Parent = window,
-        Size = UDim2.new(1,-120,1,-30),
-        Position = UDim2.new(0,120,0,30),
-        BackgroundColor3 = theme.Background,
-        BorderSizePixel = 0
+    local TabHolder = make("Frame", {
+        Parent = Window,
+        BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 0, 0, 30),
+        Size = UDim2.new(0, 120, 1, -30)
     })
 
-    -- API Window
-    local api = {}
-    api.Gui = gui
-    api.Window = window
-    api.Sidebar = sidebar
-    api.Content = content
+    local ContentFrame = make("Frame", {
+        Parent = Window,
+        BackgroundColor3 = Color3.fromRGB(45, 45, 45),
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 120, 0, 30),
+        Size = UDim2.new(1, -120, 1, -30)
+    })
 
-    function api:Toggle()
-        window.Visible = not window.Visible
-    end
+    -- Botão flutuante
+    local MenuButton = make("TextButton", {
+        Parent = ScreenGui,
+        BackgroundColor3 = Color3.fromRGB(0, 170, 127),
+        Size = UDim2.new(0, 100, 0, 40),
+        Position = UDim2.new(0.05, 0, 0.85, 0),
+        Font = Enum.Font.SourceSansBold,
+        Text = "Menu",
+        TextSize = 18,
+        TextColor3 = Color3.new(1, 1, 1)
+    })
 
-    function api:Close()
-        window.Visible = false
-    end
+    local minimized = false
+    local maximized = false
 
-    function api:Minimize()
-        TweenService:Create(window, TweenInfo.new(0.25), {Size=UDim2.new(0,200,0,30)}):Play()
-    end
-
-    function api:Maximize()
-        TweenService:Create(window, TweenInfo.new(0.25), {Size=size}):Play()
-    end
-
-    -- Toggle btn
-    toggleBtn.MouseButton1Click:Connect(function()
-        api:Toggle()
-    end)
-
-    -- Top buttons
-    btnMin.MouseButton1Click:Connect(function() api:Minimize() end)
-    btnMax.MouseButton1Click:Connect(function() api:Maximize() end)
-    btnClose.MouseButton1Click:Connect(function() api:Close() end)
-
-    -- Movimento da janela
-    local dragging, dragStart, startPos
-    titleBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = window.Position
-        end
-    end)
-    titleBar.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-        end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local delta = input.Position - dragStart
-            window.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    MinButton.MouseButton1Click:Connect(function()
+        if not minimized then
+            TweenService:Create(Window, TweenInfo.new(0.3), {Size = UDim2.new(0, 500, 0, 30)}):Play()
+            minimized = true
+        else
+            TweenService:Create(Window, TweenInfo.new(0.3), {Size = UDim2.new(0, 500, 0, 300)}):Play()
+            minimized = false
         end
     end)
 
-    Vix.windows[#Vix.windows+1] = api
-    return api
+    MaxButton.MouseButton1Click:Connect(function()
+        if not maximized then
+            TweenService:Create(Window, TweenInfo.new(0.3), {Size = UDim2.new(1, -50, 1, -50), Position = UDim2.new(0, 25, 0, 25)}):Play()
+            maximized = true
+        else
+            TweenService:Create(Window, TweenInfo.new(0.3), {Size = UDim2.new(0, 500, 0, 300), Position = UDim2.new(0.5, -250, 0.5, -150)}):Play()
+            maximized = false
+        end
+    end)
+
+    CloseButton.MouseButton1Click:Connect(function()
+        Window.Visible = false
+    end)
+
+    MenuButton.MouseButton1Click:Connect(function()
+        Window.Visible = not Window.Visible
+    end)
+
+    -- Funções para criar Tabs e Seções
+    local WindowAPI = {}
+
+    function WindowAPI:CreateTab(tabName)
+        local TabButton = make("TextButton", {
+            Parent = TabHolder,
+            Size = UDim2.new(1, 0, 0, 30),
+            BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+            BorderSizePixel = 0,
+            Text = tabName,
+            TextColor3 = Color3.new(1, 1, 1),
+            Font = Enum.Font.SourceSans,
+            TextSize = 16
+        })
+
+        local TabContent = make("ScrollingFrame", {
+            Parent = ContentFrame,
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, 0, 1, 0),
+            CanvasSize = UDim2.new(0, 0, 0, 0),
+            Visible = false
+        })
+
+        local UIListLayout = make("UIListLayout", {
+            Parent = TabContent,
+            Padding = UDim.new(0, 5),
+            SortOrder = Enum.SortOrder.LayoutOrder
+        })
+
+        TabButton.MouseButton1Click:Connect(function()
+            for _, frame in pairs(ContentFrame:GetChildren()) do
+                if frame:IsA("ScrollingFrame") then
+                    frame.Visible = false
+                end
+            end
+            TabContent.Visible = true
+        end)
+
+        local TabAPI = {}
+
+        function TabAPI:CreateSection(sectionName)
+            local Section = make("Frame", {
+                Parent = TabContent,
+                BackgroundColor3 = Color3.fromRGB(60, 60, 60),
+                Size = UDim2.new(1, -10, 0, 40)
+            })
+
+            local SectionLabel = make("TextLabel", {
+                Parent = Section,
+                BackgroundTransparency = 1,
+                Size = UDim2.new(1, 0, 0, 20),
+                Font = Enum.Font.SourceSansBold,
+                Text = sectionName,
+                TextSize = 16,
+                TextColor3 = Color3.new(1, 1, 1),
+                TextXAlignment = Enum.TextXAlignment.Left
+            })
+
+            local SectionAPI = {}
+
+            function SectionAPI:Button(text, callback)
+                local Btn = make("TextButton", {
+                    Parent = Section,
+                    BackgroundColor3 = Color3.fromRGB(80, 80, 80),
+                    Size = UDim2.new(1, -10, 0, 30),
+                    Position = UDim2.new(0, 5, 0, 20),
+                    Text = text,
+                    TextColor3 = Color3.new(1, 1, 1),
+                    Font = Enum.Font.SourceSans,
+                    TextSize = 16
+                })
+                Btn.MouseButton1Click:Connect(callback)
+            end
+
+            return SectionAPI
+        end
+
+        return TabAPI
+    end
+
+    return WindowAPI
 end
 
 return Vix
