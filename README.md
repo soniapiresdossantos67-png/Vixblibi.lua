@@ -1,4 +1,4 @@
--- Vixblibi.lua (versão compacta e corrigida)
+-- Vixblibi.lua (corrigida e com tamanho ajustado)
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
@@ -20,13 +20,13 @@ function Vix:CreateWindow(title)
         Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
     })
 
-    -- Janela principal (compacta)
+    -- Janela principal (um pouco maior)
     local Window = make("Frame", {
         Parent = ScreenGui,
         BackgroundColor3 = Color3.fromRGB(35, 35, 35),
         BorderSizePixel = 0,
-        Size = UDim2.new(0, 350, 0, 220),
-        Position = UDim2.new(0.5, -175, 0.5, -110),
+        Size = UDim2.new(0, 450, 0, 280),
+        Position = UDim2.new(0.5, -225, 0.5, -140),
         Visible = true
     })
     Window.ClipsDescendants = true
@@ -45,7 +45,7 @@ function Vix:CreateWindow(title)
         Size = UDim2.new(1, -90, 1, 0),
         Position = UDim2.new(0, 10, 0, 0),
         Font = Enum.Font.SourceSansBold,
-        Text = title or "Vix UI",
+        Text = tostring(title or "Vix UI"),
         TextColor3 = Color3.new(1, 1, 1),
         TextSize = 16,
         TextXAlignment = Enum.TextXAlignment.Left
@@ -53,7 +53,7 @@ function Vix:CreateWindow(title)
 
     -- Botões do topo
     local function makeTopBtn(txt, offset, color)
-        return make("TextButton", {
+        local btn = make("TextButton", {
             Parent = TopBar,
             Size = UDim2.new(0, 26, 1, -4),
             Position = UDim2.new(1, offset, 0, 2),
@@ -63,6 +63,7 @@ function Vix:CreateWindow(title)
             Font = Enum.Font.SourceSansBold,
             TextSize = 14
         })
+        return btn
     end
 
     local CloseButton = makeTopBtn("X", -28, Color3.fromRGB(200, 50, 50))
@@ -75,15 +76,15 @@ function Vix:CreateWindow(title)
         BackgroundColor3 = Color3.fromRGB(30, 30, 30),
         BorderSizePixel = 0,
         Position = UDim2.new(0, 0, 0, 28),
-        Size = UDim2.new(0, 100, 1, -28)
+        Size = UDim2.new(0, 120, 1, -28)
     })
 
     local ContentFrame = make("Frame", {
         Parent = Window,
         BackgroundColor3 = Color3.fromRGB(45, 45, 45),
         BorderSizePixel = 0,
-        Position = UDim2.new(0, 100, 0, 28),
-        Size = UDim2.new(1, -100, 1, -28)
+        Position = UDim2.new(0, 120, 0, 28),
+        Size = UDim2.new(1, -120, 1, -28)
     })
 
     -- 🔵 Botão bolinha flutuante
@@ -98,7 +99,6 @@ function Vix:CreateWindow(title)
         TextColor3 = Color3.new(1, 1, 1)
     })
     MenuButton.TextScaled = true
-    MenuButton.AutoButtonColor = true
     make("UICorner", {Parent = MenuButton, CornerRadius = UDim.new(1,0)})
 
     -- Minimizar, maximizar, fechar
@@ -107,10 +107,10 @@ function Vix:CreateWindow(title)
 
     MinButton.MouseButton1Click:Connect(function()
         if not minimized then
-            TweenService:Create(Window, TweenInfo.new(0.3), {Size = UDim2.new(0, 350, 0, 28)}):Play()
+            TweenService:Create(Window, TweenInfo.new(0.3), {Size = UDim2.new(0, 450, 0, 28)}):Play()
             minimized = true
         else
-            TweenService:Create(Window, TweenInfo.new(0.3), {Size = UDim2.new(0, 350, 0, 220)}):Play()
+            TweenService:Create(Window, TweenInfo.new(0.3), {Size = UDim2.new(0, 450, 0, 280)}):Play()
             minimized = false
         end
     end)
@@ -124,8 +124,8 @@ function Vix:CreateWindow(title)
             maximized = true
         else
             TweenService:Create(Window, TweenInfo.new(0.3), {
-                Size = UDim2.new(0, 350, 0, 220), 
-                Position = UDim2.new(0.5, -175, 0.5, -110)
+                Size = UDim2.new(0, 450, 0, 280), 
+                Position = UDim2.new(0.5, -225, 0.5, -140)
             }):Play()
             maximized = false
         end
@@ -173,7 +173,7 @@ function Vix:CreateWindow(title)
             Size = UDim2.new(1, 0, 0, 28),
             BackgroundColor3 = Color3.fromRGB(50, 50, 50),
             BorderSizePixel = 0,
-            Text = tabName,
+            Text = tostring(tabName),
             TextColor3 = Color3.new(1, 1, 1),
             Font = Enum.Font.SourceSans,
             TextSize = 14
@@ -222,7 +222,7 @@ function Vix:CreateWindow(title)
                 BackgroundTransparency = 1,
                 Size = UDim2.new(1, 0, 0, 18),
                 Font = Enum.Font.SourceSansBold,
-                Text = sectionName,
+                Text = tostring(sectionName),
                 TextSize = 14,
                 TextColor3 = Color3.new(1, 1, 1),
                 TextXAlignment = Enum.TextXAlignment.Left
@@ -235,7 +235,7 @@ function Vix:CreateWindow(title)
                     Parent = Section,
                     BackgroundColor3 = Color3.fromRGB(80, 80, 80),
                     Size = UDim2.new(1, -8, 0, 24),
-                    Text = text,
+                    Text = tostring(text),
                     TextColor3 = Color3.new(1, 1, 1),
                     Font = Enum.Font.SourceSans,
                     TextSize = 14
